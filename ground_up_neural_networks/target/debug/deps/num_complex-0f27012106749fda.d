@@ -1,0 +1,10 @@
+/home/cub3/documents/cs/git/github/ground_up_neural_networks/ground_up_neural_networks/target/debug/deps/num_complex-0f27012106749fda.rmeta: /home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/num-complex-0.4.3/src/lib.rs /home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/num-complex-0.4.3/src/cast.rs /home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/num-complex-0.4.3/src/pow.rs /home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/num-complex-0.4.3/src/complex_float.rs
+
+/home/cub3/documents/cs/git/github/ground_up_neural_networks/ground_up_neural_networks/target/debug/deps/libnum_complex-0f27012106749fda.rlib: /home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/num-complex-0.4.3/src/lib.rs /home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/num-complex-0.4.3/src/cast.rs /home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/num-complex-0.4.3/src/pow.rs /home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/num-complex-0.4.3/src/complex_float.rs
+
+/home/cub3/documents/cs/git/github/ground_up_neural_networks/ground_up_neural_networks/target/debug/deps/num_complex-0f27012106749fda.d: /home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/num-complex-0.4.3/src/lib.rs /home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/num-complex-0.4.3/src/cast.rs /home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/num-complex-0.4.3/src/pow.rs /home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/num-complex-0.4.3/src/complex_float.rs
+
+/home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/num-complex-0.4.3/src/lib.rs:
+/home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/num-complex-0.4.3/src/cast.rs:
+/home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/num-complex-0.4.3/src/pow.rs:
+/home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/num-complex-0.4.3/src/complex_float.rs:
