@@ -15,6 +15,9 @@ use std::fs;
 use json;
 use std::io::{stdout, Write};
 //use matrix::Matrix;
+use plotters::prelude::*;
+use chrono::{Utc, TimeZone};
+
 
 /*
 Neural Network that learns to read numbers;
@@ -54,6 +57,40 @@ fn readnumberdataset() -> Vec<Vec<Vec<f64>>>{
     return jsvec;
 }
 
+fn plot(datay : Vec<f64>, steps : i32){
+    let len = steps * datay.len() as i32;
+    
+    
+    let mut datax : Vec<i32> = Vec::new();
+
+    for x in 0..len{
+        datax.push(x*steps);
+    }
+
+    let values: Vec<(i32, f64)>= datax.iter().cloned().zip(datay.iter().cloned()).collect();
+
+    let root_area = BitMapBackend::new("plots/abc.png", (1200, 600)).into_drawing_area();
+    root_area.fill(&WHITE).unwrap();
+
+    let mut ctx = ChartBuilder::on(&root_area)
+        .set_label_area_size(LabelAreaPosition::Left, 30.0)
+        .set_label_area_size(LabelAreaPosition::Bottom, 30.0)
+        .set_label_area_size(LabelAreaPosition::Right, 30.0)
+        .set_label_area_size(LabelAreaPosition::Top, 30.0)
+        .caption("Gradient Descent", ("sans-serif", 30.0))
+        .build_cartesian_2d(0..len-steps, 0.0..1.0 )
+        .unwrap();
+
+    ctx.configure_mesh().draw().unwrap();
+
+    // Draw Scatter Plot
+    ctx.draw_series(
+        LineSeries::new(values.iter().map(|(x, y)| (*x,*y)), &BLUE)
+    ).unwrap();
+
+    root_area.present().expect("Unable to write result to file, please make sure 'plots' dir exists under current dir");
+}
+
 fn scheresteinpapier(){
     let mut nn = NeuralNetwork::new(vec![2,10,10,3]);
     let mut rng = rand::thread_rng();
@@ -61,7 +98,9 @@ fn scheresteinpapier(){
     let mut cost = 0.0;
 
     let reps = 1000000;
-    let rate = 0.001;
+    let rate = 0.0001;
+    let out = 100;
+    let mut costs = Vec::with_capacity(out);
 
     
     for x in 1..reps+1{
@@ -69,30 +108,95 @@ fn scheresteinpapier(){
         let b = rng.gen_range(0..5);
         
         let mut c = nn.eval(vec![a as f64,b as f64]);
-        println!();
-        println!("Result: {} : {} : {}",c.res[0],c.res[1],c.res[2]);
 
         if a == b{
             nn = nn.learn(c.clone(),vec![0.0,1.0,0.0],rate);
-            println!("0 : 1 : 0");
+            cost += c.res[0] + (c.res[1]-1.0).abs() + c.res[2];
         }
         else if a > b{
             nn = nn.learn(c.clone(),vec![1.0,0.0,0.0],rate);        // a wins
-            println!("1 : 0 : 0");
+            cost += c.res[1] + (c.res[0]-1.0).abs() + c.res[2];
         }
         else{
             nn = nn.learn(c.clone(),vec![0.0,0.0,1.0],rate);        // a wins
-            println!("0 : 0 : 1");
+            cost += c.res[1] + (c.res[2]-1.0).abs() + c.res[0];
         }
 
         let mut c = nn.eval(vec![a as f64,b as f64]);
 
-        println!("Result: {} : {} : {}",c.res[0],c.res[1],c.res[2]);
-        println!();
+        if x % (reps as f64 /out as f64) as i32 == 0{
+            costs.push(cost/(reps as f64 /out as f64)as f64);
+            cost = 0.0;
+        }
     }
 
+    plot(costs,( reps as f64 /out as f64 ) as i32 );
     nn.store();
  
+}
+
+fn overunder100(){
+    let mut nn = NeuralNetwork::new(vec![1,10,2]);
+    let mut rng = rand::thread_rng();
+    let reps = 300000;
+    let rate = 0.00006;
+    let out = 100;
+    let mut costs = Vec::with_capacity(out);
+
+    let mut sum = 0.0;
+    let mut cost = 0.0;
+    
+
+    for x in 1..reps+1{
+        sum = rng.gen_range(0.0..100.0);
+        let c = nn.eval(vec![sum as f64]);
+        let x = x as i32;
+        sum += rng.gen_range(0.0..100.0);
+
+        
+        if sum > 100.0{
+            nn = nn.learn(c.clone(),vec![0.0,1.0],rate);
+            cost = cost + (c.res[0]*c.res[0]);
+        }
+        else{
+            nn = nn.learn(c.clone(),vec![1.0,0.0],rate);        // a wins
+            cost = cost + (c.res[1]*c.res[1]);
+        }
+
+        if x % (reps/out) as i32 == 0{
+            costs.push(cost/(reps/out)as f64);
+            //println!("Costs: {}",rng.gen_range(0.0..100.0));
+            cost = 0.0;
+        }
+
+        /*
+        sum = rng.gen_range(0.0..100.0);
+
+        if x % (reps/out) as i32 == 0{
+            println!();
+            println!("{}% : {}",((x as f64/reps as f64)*100.0) as i32,cost/(reps/out) as f64);
+            cost = 0.0;
+            let v = [10.0,20.0,30.0,40.0,50.0,60.0,70.0,80.0,90.0];
+
+            for x in v{
+                let c = nn.eval(vec![x]);
+                //println!("{} : {} : {}",x,c.res[0],c.res[1]);
+            }
+        }
+        */
+    }
+
+    plot(costs,( reps/out ) as i32 );
+    /*
+    let v = [10.0,20.0,30.0,40.0,50.0,60.0,70.0,80.0,90.0];
+
+    println!();
+    for x in v{
+        let c = nn.eval(vec![x]);
+        println!("{} : {} : {}",x,c.res[0],c.res[1]);
+    }
+    */
+    nn.store();
 }
 
 fn recognizenumbers(){
@@ -152,80 +256,11 @@ fn recognizenumbers(){
     nn.store();
 }
 
-fn overunder100(){
-    let mut nn = NeuralNetwork::new(vec![1,100,2]);
-    let mut rng = rand::thread_rng();
-    let reps = 1000000;
-    let rate = 1.0/reps as f64;
-    let out = 10;
-
-    let mut sum = 0.0;
-    let mut cost = 0.0;
-
-    for x in 1..reps+1{
-        let c = nn.eval(vec![sum as f64]);
-        let prevsum = sum;
-        sum += rng.gen_range(0.0..100.0);
-
-        
-        if sum > 100.0{
-            nn = nn.learn(c.clone(),vec![0.0,1.0],rate);
-            cost = cost + c.res[0];
-            /*
-            println!("under : over");
-            println!("Result:   0  : 1 ({}:{})",prevsum,sum);
-            println!("MyResult: {} : {}",c.res[0],c.res[1]);
-            let c = nn.eval(vec![sum as f64]);
-            println!("After learn : {}:{}",c.res[0],c.res[1]);
-            println!();
-            */
-        }
-        else{
-            nn = nn.learn(c.clone(),vec![1.0,0.0],rate);        // a wins
-            cost = cost + c.res[1];
-            
-            /*
-            println!("under : over");
-            println!("Result: 1 : 0 ({}:{})",prevsum,sum);
-            println!("TargMyResultet: {} : {}",c.res[0],c.res[1]);
-            
-            
-            let c = nn.eval(vec![sum as f64]);
-            println!("After learn : {}:{}",c.res[0],c.res[1]);
-            println!();
-            */
-        }
-
-        sum = rng.gen_range(0.0..100.0);
-
-        if x % (reps/out) as i32 == 0{
-            println!();
-            println!("{}% : {}",((x as f64/reps as f64)*100.0) as i32,cost/(reps/out) as f64);
-            cost = 0.0;
-            let v = [10.0,20.0,30.0,40.0,50.0,60.0,70.0,80.0,90.0];
-
-            for x in v{
-                let c = nn.eval(vec![x]);
-                //println!("{} : {} : {}",x,c.res[0],c.res[1]);
-            }
-        }
-    }
-
-    let v = [10.0,20.0,30.0,40.0,50.0,60.0,70.0,80.0,90.0];
-
-    println!();
-    for x in v{
-        let c = nn.eval(vec![x]);
-        println!("{} : {} : {}",x,c.res[0],c.res[1]);
-    }
-
-    nn.store();
-}
 
 fn main() {
     env::set_var("RUST_BACKTRACE", "1");
 
     //recognizenumbers();
-    //scheresteinpapier();
-    overunder100();
+    scheresteinpapier();
+    //overunder100();
 }
