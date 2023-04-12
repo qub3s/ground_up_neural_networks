@@ -57,7 +57,7 @@ fn readnumberdataset() -> Vec<Vec<Vec<f64>>>{
     return jsvec;
 }
 
-fn plot(datay : Vec<f64>, steps : i32){
+fn plot(datay : Vec<f64>, steps : i32){ 
     let len = steps * datay.len() as i32;
     
     
@@ -91,14 +91,15 @@ fn plot(datay : Vec<f64>, steps : i32){
     root_area.present().expect("Unable to write result to file, please make sure 'plots' dir exists under current dir");
 }
 
+/*
 fn scheresteinpapier(){
-    let mut nn = NeuralNetwork::new(vec![2,10,10,3]);
+    let mut nn = NeuralNetwork::new(vec![2,250,100,3]);
     let mut rng = rand::thread_rng();
 
     let mut cost = 0.0;
 
     let reps = 1000000;
-    let rate = 0.0001;
+    let rate = 0.01;
     let out = 100;
     let mut costs = Vec::with_capacity(out);
 
@@ -186,7 +187,7 @@ fn overunder100(){
         */
     }
 
-    plot(costs,( reps/out ) as i32 );
+    
     /*
     let v = [10.0,20.0,30.0,40.0,50.0,60.0,70.0,80.0,90.0];
 
@@ -196,22 +197,26 @@ fn overunder100(){
         println!("{} : {} : {}",x,c.res[0],c.res[1]);
     }
     */
+    plot(costs,( reps as f64 /out as f64 ) as i32 );
     nn.store();
 }
+*/
 
 fn recognizenumbers(){
     let jsvec = readnumberdataset();
-    let rate = 0.0000000001;
     let mut rng = rand::thread_rng();
     let outsize = 3;
-    let mut nn = NeuralNetwork::new(vec![1024,100,10,outsize]);
-    //nn = NeuralNetwork::load();
+    let mut nn = NeuralNetwork::new(vec![1024,10,10,outsize]);
 
-    for x in 0..100000{
+    let reps = 50000;
+    let rate = 0.0001;
+    let out = 100;
+    let mut costs = Vec::with_capacity(out);    
+    let mut cost = 0.0;
+    
+    for x in 1..reps+1{
         let number = rng.gen_range(0..outsize);
-        println!();
-        println!("N: {}",number);
-        let example = 0; //rng.gen_range(0..100);
+        let example = rng.gen_range(0..100);
 
         let mut target = Vec::with_capacity(10);
         for l in 0..outsize{
@@ -223,44 +228,39 @@ fn recognizenumbers(){
             }
         }
 
-        // jsvec[number][example].clone()
-        let c = nn.eval(jsvec[number][example].clone());
-        println!("Res:");
-        for x in 0..outsize{
-            println!("{}:{}",x,c.res[x]);
+        let c = nn.eval(jsvec[number][example].clone());       
+
+        let mut tmp = 0.0;
+        for x in 0..target.len(){
+            tmp += ( target[0] - c.mat[0] ).abs();
         }
-        
+        cost += tmp as f64;
 
-        nn = nn.learn(c.clone(),target,rate);
+        
+        let wb = nn.backprop(jsvec[number][example].clone(),target,rate);    
+        nn = nn.applydeltawb(wb);
         
         let c = nn.eval(jsvec[number][example].clone());
 
-        println!("After learn:");
-        for x in 0..outsize{
-            println!("{}:{}",x,c.res[x]);
+        if x % ( reps as f64 / out as f64 ) as i32 == 0{
+            costs.push(cost / ( reps as f64 /out as f64 ));
+            cost = 0.0;
         }
-
     }
 
-    /*
-    for y in 0..3{
-        let c = nn.eval(jsvec[y][0].clone());
+    plot(costs,( reps as f64 /out as f64 ) as i32 );
 
-        for x in 0..outsize{
-            println!("{}:{}",x,c.res[x]);
-        }
-        println!();
-    }
-    */
-    
+
     nn.store();
+    
 }
 
 
 fn main() {
     env::set_var("RUST_BACKTRACE", "1");
+    println!("start");
 
-    //recognizenumbers();
-    scheresteinpapier();
+    recognizenumbers();
+    //scheresteinpapier();
     //overunder100();
 }

@@ -2,7 +2,7 @@ from PIL import Image
 import os
 import time
 
-num = 2
+num = 0
 
 c = 0
 f = open(str(num)+".json", "a")   
@@ -18,7 +18,8 @@ for a in dirs:
             v = 0
             for n1 in range(0,4):
                 for n2 in range(0,4):
-                    v += img.getpixel((n1,n2))/16;      
+                    v += img.getpixel((x+n1,y+n2))/16;  
+            
             s = s + str(int(v))
 
             if(not (x == 124 and y == 124)):

@@ -28,9 +28,9 @@ pub struct NeuralNetwork{
 }
 
 #[derive(Clone)]
-pub struct Result{
-    pub nodevalues: Vec<Matrix<Mval>>,
-    pub res: Vec<Mval>
+pub struct Deltawb{
+    pub w: Vec<Matrix<Mval>>,
+    pub b: Vec<Matrix<Mval>>
 }
 
 impl NeuralNetwork{
@@ -49,11 +49,11 @@ impl NeuralNetwork{
 
             // fills bias and matrix with random numbers
             for _ in 0..tnodesperlayer[i]{
-                tbias.push(rng.gen_range(0.0..1.0));
+                tbias.push(rng.gen_range(0.0..0.2)); //
             }
 
             for _ in 0.. tnodesperlayer[i]*tnodesperlayer[i-1]{
-                tmat.push(rng.gen_range(0.0..(tnodesperlayer[i-1] as f64).sqrt()))
+                tmat.push(rng.gen_range(0.0..(2.0/tnodesperlayer[i-1] as f64).sqrt()))
             }
             
             // creates struct
@@ -79,114 +79,91 @@ impl NeuralNetwork{
     }
 
     // evaluates input
-    pub fn eval(&self, input: Vec<Mval>) -> Result{
+    pub fn eval(&self, input: Vec<Mval>) -> Matrix<Mval>{
         let mut i = Matrix::new_v(input);
-        let mut res: Vec<Mval> = Vec::with_capacity(0);                                      // calc capa
-        let mut nodevalues: Vec<Matrix<Mval>> = Vec::with_capacity(0);                      // calculate capacity
 
-        nodevalues.push(i.clone());
         for l in &self.layer{
             let z = &(&l.w * &i) + &l.b;
-            
-            /*
-            println!("Input: ");
-            i.pout();
-            
-            println!("Weights: ");
-            l.w.pout();
-            
-            println!("Biases: ");
-            l.b.pout();
-
-            println!("Z: ");
-            z.pout();
-            */
 
             i = z.map(Self::activfunc);
-
-            //println!("Activation: ");
-            //i.pout();
-
-            nodevalues.push(i.clone());
-            //println!();
-        }
-         
-        for l in 0..(&i).geth(){
-            res.push((&i).mat[l]);
         }
 
-        return Result { res: Self::softmax(res), nodevalues: nodevalues };
+        return Self::softmax(i);
     }
 
-    pub fn learn(mut self, res: Result, mut target: Vec<Mval>, rate: Mval) -> NeuralNetwork{
+    pub fn backprop(&self, input: Vec<Mval>, mut target: Vec<Mval>, rate: Mval) -> Deltawb{
 
-        // calculate error
-        for l in 0..target.len(){
-            target[l] = target[l] - res.res[l];
-        }
-
-        // create Matrix from Error
-        let mut delta = Matrix::new_v(target);
-
-        let layer = self.layer.len();
+        let mut a = Matrix::new_v(input);
+        let mut zv: Vec<Matrix<Mval>> = Vec::with_capacity(0);                      // calculate capacity
+        let mut av: Vec<Matrix<Mval>> = Vec::with_capacity(0);                      // calculate capacity
+        let mut biases: Vec<Matrix<Mval>> = Vec::with_capacity(0);                  // calculate capacity
+        let mut weights: Vec<Matrix<Mval>> = Vec::with_capacity(0);                 // calculate capacity
         
-        let mut z : Vec<Matrix<Mval> > = Vec::with_capacity(layer);
-        // Calculate all the values before activation function
-        for x in 0..layer{
-            let y = layer-1 -1*x;
-
-            let lw = &self.layer[y].w;                                                                  
-            let lb = &self.layer[y].b;
-            let lam1 = &res.nodevalues[&res.nodevalues.len()-2-1*x].clone();
-
-            z.push(&(lw * &lam1) + lb);
+        av.push(a.clone());                                                         // first element
+        for l in &self.layer{
+            let z = &(&l.w * &a) + &l.b;
+            zv.push(z.clone());                                                     // clone entfernen
+            a = z.map(Self::activfunc);
+            av.push(a.clone());                                                     // clone entfernen
         }
+        let x = av.len()-1;
+        av[x] = Self::softmax(av[x].clone());                                       // clone entfernen
+             
+    
+        let mut delta = &av[x] + &Matrix::new_v(target).mulnum(-1.0);               // delta berechnen /vielleicht extra funktion
 
-        for l in 0..layer{
+        let layer = av.len()-1;
 
+        for l in 0..self.layer.len(){
             let y = self.layer.len()-1 -1*l;
-            let talm1 = &res.nodevalues[&res.nodevalues.len()-2-1*l].clone().transpose();                   // transposed Layeractivationvalues transpose  
-            z[l] = z[l].clone().map(Self::derivactivfunc);                                                  // use relu derivation
+            
+            let talm1 = &av[av.len()-2-l].clone().transpose();                                                       // transposed Layeractivationvalues transpose  
+            zv[l] = zv[l].clone().map(Self::derivactivfunc);                                                            // use relu derivation
             
             if l == 0{
-                delta = delta.hadamard(&z[l]);                                                              // first round 
+                delta = delta.hadamard(&zv[y]).mulnum(-rate);                                                           // first round  (doppel - entfernen)
             }
             else{
-                delta = (&self.layer[y+1].w.transpose() * &delta).hadamard(&z[l]);                          // propagate the error backwards
+                delta = (&(&self.layer[y+1].w.transpose() * &delta)).hadamard(&zv[y]);                                  // propagate the error backwards
             }
 
-            delta = delta.mulnum(rate);                                                                     // multiply the learning rate
-            self.layer[y].b = &self.layer[y].b + &delta;                                                    // change biases
-            self.layer[y].w = &self.layer[y].w + &(&delta*&talm1);                                          // change weights
+            biases.push(delta.clone());
+            weights.push((&delta*&talm1).clone())                                                                // change biases
         }
-        
+
+        return Deltawb {w: weights, b: biases};
+    }
+
+    pub fn applydeltawb(mut self, delta: Deltawb) -> Self{
+        for l in 0..delta.b.len(){
+            self.layer[l].b = &self.layer[l].b + &delta.b[delta.b.len()-1-l];                                                  // change biases
+            self.layer[l].w = &self.layer[l].w + &delta.w[delta.b.len()-1-l];    
+        }
         return self;
     }
 
     // gets percentages in the last layer
-    pub fn softmax( mut vec: Vec<Mval>) -> Vec<Mval>{
+    pub fn softmax( mut vec: Matrix<Mval>) -> Matrix<Mval>{
         let mut sum = 0.0;
-        let mut max = vec[0];
+        let mut max = vec.mat[0];
         
-        for i in 1..vec.len(){
-            if vec[i] > max{
-                max = vec[i];
+        for i in 1..vec.mat.len(){
+            if vec.mat[i] > max{
+                max = vec.mat[i];
             }
         }
 
-        for i in 0..vec.len(){
-            sum += (vec[i]-max).exp();
+        for i in 0..vec.mat.len(){
+            sum += (vec.mat[i]-max).exp();
         }
 
-        
-
-        for i in 0..vec.len(){
-            let mut tmp = (vec[i]-max).exp();
+        for i in 0..vec.mat.len(){
+            let mut tmp = (vec.mat[i]-max).exp();
             if tmp < 0.00000000001{
-                vec[i] = 0.0;
+                vec.mat[i] = 0.0;
             }
             else{
-                vec[i] = tmp/sum;
+                vec.mat[i] = tmp/sum;
             }
         }
 
