@@ -1,0 +1,8 @@
+/home/cub3/documents/cs/git/github/ground_up_neural_networks/ground_up_neural_networks/target/release/deps/same_file-2d083dbd4c8a38b3.rmeta: /home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/same-file-1.0.6/src/lib.rs /home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/same-file-1.0.6/src/unix.rs
+
+/home/cub3/documents/cs/git/github/ground_up_neural_networks/ground_up_neural_networks/target/release/deps/libsame_file-2d083dbd4c8a38b3.rlib: /home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/same-file-1.0.6/src/lib.rs /home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/same-file-1.0.6/src/unix.rs
+
+/home/cub3/documents/cs/git/github/ground_up_neural_networks/ground_up_neural_networks/target/release/deps/same_file-2d083dbd4c8a38b3.d: /home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/same-file-1.0.6/src/lib.rs /home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/same-file-1.0.6/src/unix.rs
+
+/home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/same-file-1.0.6/src/lib.rs:
+/home/cub3/.cargo/registry/src/github.com-1ecc6299db9ec823/same-file-1.0.6/src/unix.rs:

@@ -142,6 +142,30 @@ impl NeuralNetwork{
         return self;
     }
 
+    pub fn minibatch(mut self, inputs: Vec<Vec<Mval>>, targets: Vec<Vec<Mval>>, rate: Mval) -> Self{
+        if inputs.len() != targets.len(){
+            panic!("Wrong dimensions!!!");
+        }
+
+        let mut deltas = self.backprop(inputs[0].clone(),targets[0].clone(),rate);
+        for l in 1..inputs.len(){
+            let tmp = self.backprop(inputs[l].clone(),targets[l].clone(),rate);
+            
+            for m in 0..deltas.w.len(){
+                deltas.w[m] = &deltas.w[m] + &tmp.w[m];
+                deltas.b[m] = &deltas.b[m] + &tmp.b[m];                
+            }
+        }
+        /*
+        for m in 0..deltas.w.len(){
+            deltas.w[m] = deltas.w[m].clone().mulnum(1.0/inputs.len() as f64);
+            deltas.b[m] = deltas.b[m].clone().mulnum(1.0/inputs.len() as f64);                
+        }
+        */
+        return self.applydeltawb(deltas);
+
+    }
+
     // gets percentages in the last layer
     pub fn softmax( mut vec: Matrix<Mval>) -> Matrix<Mval>{
         let mut sum = 0.0;

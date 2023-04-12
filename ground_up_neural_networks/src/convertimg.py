@@ -2,7 +2,7 @@ from PIL import Image
 import os
 import time
 
-num = 0
+num = 9
 
 c = 0
 f = open(str(num)+".json", "a")   

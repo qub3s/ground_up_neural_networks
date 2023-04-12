@@ -39,7 +39,7 @@ fn print_type_of<T>(_: &T) {
 fn readnumberdataset() -> Vec<Vec<Vec<f64>>>{
     let mut jsvec: Vec<Vec<Vec<f64>>> = Vec::new();
 
-    for x in 0..3{
+    for x in 0..10{
         let ch = x.to_string();
         let fc = fs::read("json_dataset/".to_owned() + &ch + ".json").expect("Can't read File!");
         let fc = std::str::from_utf8(&fc).unwrap();
@@ -69,7 +69,7 @@ fn plot(datay : Vec<f64>, steps : i32){
 
     let values: Vec<(i32, f64)>= datax.iter().cloned().zip(datay.iter().cloned()).collect();
 
-    let root_area = BitMapBackend::new("plots/abc.png", (1200, 600)).into_drawing_area();
+    let root_area = BitMapBackend::new("plots/abcd.png", (1200, 600)).into_drawing_area();
     root_area.fill(&WHITE).unwrap();
 
     let mut ctx = ChartBuilder::on(&root_area)
@@ -78,7 +78,7 @@ fn plot(datay : Vec<f64>, steps : i32){
         .set_label_area_size(LabelAreaPosition::Right, 30.0)
         .set_label_area_size(LabelAreaPosition::Top, 30.0)
         .caption("Gradient Descent", ("sans-serif", 30.0))
-        .build_cartesian_2d(0..len-steps, 0.0..1.0 )
+        .build_cartesian_2d(0..len-steps, 0.0..2.0 )
         .unwrap();
 
     ctx.configure_mesh().draw().unwrap();
@@ -91,134 +91,27 @@ fn plot(datay : Vec<f64>, steps : i32){
     root_area.present().expect("Unable to write result to file, please make sure 'plots' dir exists under current dir");
 }
 
-/*
-fn scheresteinpapier(){
-    let mut nn = NeuralNetwork::new(vec![2,250,100,3]);
-    let mut rng = rand::thread_rng();
-
-    let mut cost = 0.0;
-
-    let reps = 1000000;
-    let rate = 0.01;
-    let out = 100;
-    let mut costs = Vec::with_capacity(out);
-
-    
-    for x in 1..reps+1{
-        let a = rng.gen_range(0..5);
-        let b = rng.gen_range(0..5);
-        
-        let mut c = nn.eval(vec![a as f64,b as f64]);
-
-        if a == b{
-            nn = nn.learn(c.clone(),vec![0.0,1.0,0.0],rate);
-            cost += c.res[0] + (c.res[1]-1.0).abs() + c.res[2];
-        }
-        else if a > b{
-            nn = nn.learn(c.clone(),vec![1.0,0.0,0.0],rate);        // a wins
-            cost += c.res[1] + (c.res[0]-1.0).abs() + c.res[2];
-        }
-        else{
-            nn = nn.learn(c.clone(),vec![0.0,0.0,1.0],rate);        // a wins
-            cost += c.res[1] + (c.res[2]-1.0).abs() + c.res[0];
-        }
-
-        let mut c = nn.eval(vec![a as f64,b as f64]);
-
-        if x % (reps as f64 /out as f64) as i32 == 0{
-            costs.push(cost/(reps as f64 /out as f64)as f64);
-            cost = 0.0;
-        }
-    }
-
-    plot(costs,( reps as f64 /out as f64 ) as i32 );
-    nn.store();
- 
-}
-
-fn overunder100(){
-    let mut nn = NeuralNetwork::new(vec![1,10,2]);
-    let mut rng = rand::thread_rng();
-    let reps = 300000;
-    let rate = 0.00006;
-    let out = 100;
-    let mut costs = Vec::with_capacity(out);
-
-    let mut sum = 0.0;
-    let mut cost = 0.0;
-    
-
-    for x in 1..reps+1{
-        sum = rng.gen_range(0.0..100.0);
-        let c = nn.eval(vec![sum as f64]);
-        let x = x as i32;
-        sum += rng.gen_range(0.0..100.0);
-
-        
-        if sum > 100.0{
-            nn = nn.learn(c.clone(),vec![0.0,1.0],rate);
-            cost = cost + (c.res[0]*c.res[0]);
-        }
-        else{
-            nn = nn.learn(c.clone(),vec![1.0,0.0],rate);        // a wins
-            cost = cost + (c.res[1]*c.res[1]);
-        }
-
-        if x % (reps/out) as i32 == 0{
-            costs.push(cost/(reps/out)as f64);
-            //println!("Costs: {}",rng.gen_range(0.0..100.0));
-            cost = 0.0;
-        }
-
-        /*
-        sum = rng.gen_range(0.0..100.0);
-
-        if x % (reps/out) as i32 == 0{
-            println!();
-            println!("{}% : {}",((x as f64/reps as f64)*100.0) as i32,cost/(reps/out) as f64);
-            cost = 0.0;
-            let v = [10.0,20.0,30.0,40.0,50.0,60.0,70.0,80.0,90.0];
-
-            for x in v{
-                let c = nn.eval(vec![x]);
-                //println!("{} : {} : {}",x,c.res[0],c.res[1]);
-            }
-        }
-        */
-    }
-
-    
-    /*
-    let v = [10.0,20.0,30.0,40.0,50.0,60.0,70.0,80.0,90.0];
-
-    println!();
-    for x in v{
-        let c = nn.eval(vec![x]);
-        println!("{} : {} : {}",x,c.res[0],c.res[1]);
-    }
-    */
-    plot(costs,( reps as f64 /out as f64 ) as i32 );
-    nn.store();
-}
-*/
-
 fn recognizenumbers(){
     let jsvec = readnumberdataset();
     let mut rng = rand::thread_rng();
-    let outsize = 3;
+    let outsize = 10;
     let mut nn = NeuralNetwork::new(vec![1024,10,10,outsize]);
 
-    let reps = 50000;
-    let rate = 0.0001;
-    let out = 100;
+    let reps = 700000;
+    let rate = 0.00001;
+    let out = 1000;
     let mut costs = Vec::with_capacity(out);    
     let mut cost = 0.0;
+
+    let mut minibatchtargets = Vec::new();
+    let mut minibatchinputs = Vec::new();
+    let minibatchsize = 5;
     
     for x in 1..reps+1{
         let number = rng.gen_range(0..outsize);
         let example = rng.gen_range(0..100);
 
-        let mut target = Vec::with_capacity(10);
+        let mut target = Vec::with_capacity(outsize);
         for l in 0..outsize{
             if l == number{
                 target.push(1.0);
@@ -236,11 +129,17 @@ fn recognizenumbers(){
         }
         cost += tmp as f64;
 
-        
-        let wb = nn.backprop(jsvec[number][example].clone(),target,rate);    
-        nn = nn.applydeltawb(wb);
+        minibatchinputs.push(jsvec[number][example].clone());
+        minibatchtargets.push(target);
+
+        if x % minibatchsize == 0{
+            nn = nn.minibatch(minibatchinputs.clone(),minibatchtargets,rate).clone();
+            minibatchtargets = Vec::new();
+            minibatchinputs = Vec::new(); 
+        }
         
         let c = nn.eval(jsvec[number][example].clone());
+        
 
         if x % ( reps as f64 / out as f64 ) as i32 == 0{
             costs.push(cost / ( reps as f64 /out as f64 ));
@@ -258,7 +157,6 @@ fn recognizenumbers(){
 
 fn main() {
     env::set_var("RUST_BACKTRACE", "1");
-    println!("start");
 
     recognizenumbers();
     //scheresteinpapier();
